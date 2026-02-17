@@ -1,50 +1,116 @@
-const API_BASE = 'https://ftsmart-backend.onrender.com'; // si tu déploies, mets ici 'https://<ton-backend-render>'
+// FTsmart - frontend script
+// Lit meta ftmsmart-api-base si présente
+function getApiBaseFromMeta() {
+  const m = document.querySelector('meta[name="ftsmart-api-base"]');
+  return m ? m.getAttribute('content').trim() : '';
+}
+const API_BASE = getApiBaseFromMeta() || (window.location.hostname === 'localhost' ? 'http://localhost:4000' : '');
 
-function showMessage(t){ document.getElementById('messages').textContent = t; }
+function showMessage(t){ const el = document.getElementById('messages'); if(el) el.textContent = t; }
 
+// utile pour tooltip hints
+const HINTS = {
+  motsCles: 'Mots-clés : tapez un métier, une tâche ou un intitulé. Ex : "employé polyvalent", "comptable".',
+  commune: 'Code INSEE : code officiel de la commune (facultatif). Vous pouvez laisser vide et préciser la région.',
+  region: 'Région : nom de la région (ex : Île-de-France).',
+  typeContrat: 'Type de contrat : CDI, CDD, intérim, apprentissage, etc.',
+  experience: 'Niveaux D / E / S : D = débutant, E = expérimenté, S = senior.',
+  skills: 'Compétences : mots séparés par des virgules (ex : vente, accueil, mécanique).'
+};
+
+// small utilities
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+// popup logic
+const overlay = document.getElementById('overlay');
+const popupBody = document.getElementById('popup-body');
+const popupClose = document.getElementById('popupClose');
+document.getElementById('help-trigger').addEventListener('click', openWhatIs);
+document.getElementById('whatIs').addEventListener('click', openWhatIs);
+popupClose.addEventListener('click', closePopup);
+overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closePopup(); });
+
+function openWhatIs(e){
+  e && e.preventDefault();
+  const html = `
+    <p><strong>FTsmart</strong> est un outil d’exploration d’offres qui vous aide à retrouver rapidement des annonces adaptées — tous métiers confondus. Il classe les résultats selon la correspondance entre vos compétences et la localisation.</p>
+
+    <p>Pourquoi c’est utile : il rassemble la recherche, le tri et des liens pratiques (création de CV / lettre) pour vous permettre d’agir vite. Nous utilisons des offres publiques (API de services emploi) et proposont un tri simple et lisible.</p>
+
+    <p>Potentiel : FTsmart permet d’orienter les chercheurs d’emploi, de simplifier la découverte d’offres et de faciliter la candidature. Avec des améliorations (profil utilisateur, alertes, CV/lettre intégrés), il peut devenir une console complète de préparation au recrutement.</p>
+
+    <p>En gros, il existe plusieurs millions de profils/inscrits sur les plateformes publiques : par exemple le nombre d’inscrits suivi par le service public est de l’ordre de plusieurs millions, et des CVthèques privées comme HelloWork annoncent des banques de plusieurs millions de CV. Ces ordres de grandeur montrent l’ampleur du vivier disponible pour les entreprises et candidats. <em>(sources publiques)</em></p>
+  `;
+  popupBody.innerHTML = html;
+  overlay.classList.remove('hidden');
+}
+function closePopup(){ overlay.classList.add('hidden'); }
+
+// hint tooltip behaviour
+const hintEl = document.getElementById('hint');
+document.querySelectorAll('.hint-btn').forEach(btn=>{
+  btn.addEventListener('click', (e)=>{
+    const k = e.currentTarget.getAttribute('data-key');
+    const text = HINTS[k] || 'Information';
+    // position near button
+    const rect = e.currentTarget.getBoundingClientRect();
+    hintEl.textContent = text;
+    hintEl.style.left = (rect.right + 8) + 'px';
+    hintEl.style.top = (rect.top) + 'px';
+    hintEl.classList.remove('hidden');
+    setTimeout(()=> hintEl.classList.add('hidden'), 8000);
+  });
+});
+
+// search and rendering
 async function searchOffers(){
   showMessage('Recherche en cours...');
   const body = {
     motsCles: document.getElementById('motsCles').value.trim(),
-    commune: document.getElementById('commune').value.trim(),
-    departement: document.getElementById('departement').value.trim(),
-    region: document.getElementById('region').value.trim(),
-    typeContrat: document.getElementById('typeContrat').value.trim(),
-    experience: document.getElementById('experience').value.trim(),
-    qualification: document.getElementById('qualification').value.trim(),
+    commune: document.getElementById('commune') ? document.getElementById('commune').value.trim() : '',
+    region: document.getElementById('region') ? document.getElementById('region').value.trim() : '',
+    typeContrat: document.getElementById('typeContrat') ? document.getElementById('typeContrat').value.trim() : '',
+    experience: document.getElementById('experience') ? document.getElementById('experience').value.trim() : '',
+    qualification: document.getElementById('qualification') ? document.getElementById('qualification').value.trim() : '',
     skills: document.getElementById('skills').value.split(',').map(s=>s.trim()).filter(Boolean),
-    distance: Number(document.getElementById('distance').value || 100)
+    distance: Number(document.getElementById('distance').value || 50)
   };
-  let base = API_BASE;
-  if (!base) base = window.location.hostname === 'localhost' ? 'http://localhost:4000' : '';
-  if (!base){
-    showMessage('API non configurée : ouvre script.js et colle l’URL publique du backend dans API_BASE.');
+
+  if (!API_BASE){
+    showMessage('API non configurée : ajoute la meta ftmsmart-api-base dans index.html ou définis API_BASE.');
     return;
   }
+
   try {
-    const resp = await fetch(base + '/api/search', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body) });
+    const resp = await fetch(API_BASE + '/api/search', {
+      method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(body)
+    });
     if (!resp.ok) throw new Error('Erreur backend ' + resp.status);
     const data = await resp.json();
     renderResults(data.results || []);
     showMessage('');
-  } catch (e){
-    console.error(e);
-    showMessage('Erreur : ' + (e.message || 'problème'));
+  } catch (err){
+    console.error(err);
+    showMessage('Erreur : ' + (err.message || 'problème'));
   }
 }
 
 function renderResults(results){
-  const container = document.getElementById('results');
-  if (!results.length){ container.innerHTML = '<div class="muted">Aucun résultat</div>'; return; }
-  container.innerHTML = results.map(item => {
-    const o = item.offer || item;
-    const score = item.score !== undefined ? Number(item.score).toFixed(2) : (item.meta?.finalScore||0).toFixed(2);
-    const dist = item.meta?.distanceKm ? (Number(item.meta.distanceKm).toFixed(1)+' km') : '';
+  const node = document.getElementById('results');
+  if (!results.length){ node.innerHTML = '<div class="muted">Aucun résultat — essayez d’élargir les critères.</div>'; return; }
+  node.innerHTML = results.map(r=>{
+    const o = r.offer || r;
+    const title = escapeHtml(o.intitule || o.title || '—');
+    const company = escapeHtml(o.entreprise?.nom || o.employeur?.nom || '');
+    const place = escapeHtml(o.lieuTravail?.libelle || '');
+    const desc = escapeHtml((o.description||'').slice(0,240));
+    const score = (r.score !== undefined ? Number(r.score).toFixed(2) : (r.meta?.finalScore||0).toFixed(2));
+    const dist = r.meta?.distanceKm ? (Number(r.meta.distanceKm).toFixed(1) + ' km') : '';
     return `<div class="offer">
       <div>
-        <div class="title">${escapeHtml(o.intitule || o.title || '—')}</div>
-        <div class="meta">${escapeHtml(o.entreprise?.nom || o.employeur?.nom || '')} — ${escapeHtml(o.lieuTravail?.libelle || '')}</div>
-        <div class="small">${escapeHtml((o.description||'').slice(0,240))}</div>
+        <div class="title">${title}</div>
+        <div class="meta">${company} — ${place}</div>
+        <div class="small">${desc}</div>
       </div>
       <div style="text-align:right">
         <div class="small">score: ${score}</div>
@@ -54,7 +120,11 @@ function renderResults(results){
   }).join('');
 }
 
-function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+// attach search button
+document.getElementById('searchBtn').addEventListener('click', (e)=>{ e.preventDefault(); searchOffers(); });
 
-document.getElementById('searchBtn').addEventListener('click', searchOffers);
-
+// keyboard: press Enter in input triggers search
+['motsCles','skills','commune','region'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el){ el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') { e.preventDefault(); searchOffers(); } }); }
+});
