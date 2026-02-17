@@ -2,30 +2,131 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8" />
-  <meta name="ftsmart-api-base" content="https://ftsmart-backend.onrender.com" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>FTsmart — Recherche d'offres</title>
+
+  <meta name="ftsmart-api-base" content="https://ftsmart-backend.onrender.com">
+
+  <!-- Google font (inter) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="wrap">
-    <header><h1>FTsmart</h1></header>
-    <main>
-      <div class="form">
-        <input id="motsCles" placeholder="mots-clés (ex: développeur java)" />
-        <input id="commune" placeholder="commune (code INSEE)" />
-        <input id="departement" placeholder="département (ex: 75)" />
-        <input id="region" placeholder="région" />
-        <input id="typeContrat" placeholder="typeContrat (CDI,CDD)" />
-        <input id="experience" placeholder="experience (D/E/S)" />
-        <input id="qualification" placeholder="qualification" />
-        <input id="skills" placeholder="skills (ex: react,node,sql)" />
-        <input id="distance" type="number" placeholder="distance (km)" value="100" />
-        <button id="searchBtn">Rechercher</button>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">FT<span>smart</span></div>
+        <div class="tag">Trouver — Trier — Se préparer</div>
       </div>
-      <div id="messages" class="muted"></div>
-      <div id="results"></div>
+      <nav class="top-actions">
+        <a class="link-ghost" href="#" id="help-trigger">Qu'est-ce que c'est ?</a>
+      </nav>
+    </header>
+
+    <main class="hero">
+      <div class="hero-inner">
+        <h1>Trouve les offres qui te correspondent</h1>
+        <p class="lead">Recherche par métier, lieu, type de contrat ou compétences — pour tous les secteurs.</p>
+
+        <form id="searchForm" class="search-form" onsubmit="event.preventDefault(); searchOffers();">
+          <div class="row">
+            <label> Mots-clés
+              <button type="button" class="hint-btn" data-key="motsCles" aria-label="Aide sur mots-clés">!</button>
+            </label>
+            <input id="motsCles" placeholder="ex : employé polyvalent, comptable, infirmier" />
+          </div>
+
+          <div class="row small-cols">
+            <div>
+              <label> Commune (code INSEE)
+                <button type="button" class="hint-btn" data-key="commune" aria-label="Aide sur commune">!</button>
+              </label>
+              <input id="commune" placeholder="ex : 75056 (Paris) ou laisse vide" />
+            </div>
+            <div>
+              <label> Région
+                <button type="button" class="hint-btn" data-key="region" aria-label="Aide sur région">!</button>
+              </label>
+              <input id="region" placeholder="ex : Île-de-France" />
+            </div>
+          </div>
+
+          <div class="row small-cols">
+            <div>
+              <label> Type de contrat
+                <button type="button" class="hint-btn" data-key="typeContrat" aria-label="Aide sur type de contrat">!</button>
+              </label>
+              <input id="typeContrat" placeholder="ex : CDI, CDD, Intérim" />
+            </div>
+            <div>
+              <label> Expérience (D / E / S)
+                <button type="button" class="hint-btn" data-key="experience" aria-label="Aide sur expérience">!</button>
+              </label>
+              <input id="experience" placeholder="D = débutant, E = expérimenté, S = senior" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label> Compétences (remplace “skills”)
+              <button type="button" class="hint-btn" data-key="skills" aria-label="Aide sur compétences">!</button>
+            </label>
+            <input id="skills" placeholder="sépare par des virgules, ex : vente, accueil, mécanique" />
+          </div>
+
+          <div class="row controls">
+            <div class="radius">
+              <label> Rayon (km)</label>
+              <input id="distance" type="number" value="50" min="1" />
+            </div>
+
+            <button id="searchBtn" class="btn-primary" type="submit" aria-label="Rechercher">Rechercher</button>
+          </div>
+        </form>
+      </div>
     </main>
-  </div>
-  <script src="script.js"></script>
+
+    <section class="results-wrap" id="resultsWrap">
+      <div class="results-inner" id="results">
+        <!-- Résultats injectés ici -->
+      </div>
+    </section>
+
+    <section class="promo">
+      <div class="promo-card">
+        <div class="mini-cv">
+          <div class="cv-thumb">CV</div>
+          <div class="cv-text">
+            <strong>CV prêt à l’emploi</strong>
+            <p>Créez votre CV gratuitement maintenant.</p>
+          </div>
+        </div>
+        <div class="promo-actions">
+          <a class="btn-outline" target="_blank" rel="noopener" href="https://www.hellowork.com/fr-fr/outil/cv.html">Créer un CV</a>
+          <a class="btn-outline" target="_blank" rel="noopener" href="https://www.hellowork.com/fr-fr/outil/lettre-motivation.html">Créer une lettre</a>
+        </div>
+      </div>
+
+      <div class="promo-note">
+        <p>Besoin d’aide sur le monde du travail ? <a target="_blank" rel="noopener" href="https://www.onisep.fr/vers-l-emploi/recherche-d-emploi/premiers-pas-vers-l-emploi-vos-questions-nos-reponses">Nos ressources Onisep</a>.</p>
+      </div>
+    </section>
+
+    <footer class="page-footer">
+      <button id="whatIs" class="link-muted">Qu'est-ce que c'est ?</button>
+    </footer>
+
+    <!-- Tooltip / Popup templates -->
+    <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
+      <div class="popup" role="document" aria-labelledby="popup-title">
+        <button class="popup-close" id="popupClose" aria-label="Fermer">✕</button>
+        <h3 id="popup-title">Qu'est-ce que FTsmart ?</h3>
+        <div id="popup-body" class="popup-body"></div>
+      </div>
+    </div>
+
+    <div id="hint" class="hint-pop hidden" role="tooltip"></div>
+
+  <script src="script.js" defer></script>
 </body>
 </html>
