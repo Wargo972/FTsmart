@@ -33,13 +33,23 @@ overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closePopup(); 
 function openWhatIs(e){
   e && e.preventDefault();
   const html = `
-    <p><strong>FTsmart</strong> est un outil d’exploration d’offres qui vous aide à retrouver rapidement des annonces adaptées — tous métiers confondus. Il classe les résultats selon la correspondance entre vos compétences et la localisation.</p>
+    <p><strong>FTsmart</strong> est une solution de recherche d’offres conçue pour rendre la recherche d’emploi plus rapide, plus ciblée et plus efficace.</p>
 
-    <p>Pourquoi c’est utile : il rassemble la recherche, le tri et des liens pratiques (création de CV / lettre) pour vous permettre d’agir vite. Nous utilisons des offres publiques (API de services emploi) et proposont un tri simple et lisible.</p>
+  <h3>Ce que nous faisons</h3>
+  <ul>
+    <li>Un moteur qui agrège des offres publiques et consolide les résultats.</li>
+    <li>Un tri par pertinence centré sur vos compétences et votre localisation.</li>
+    <li>Des liens directs vers des outils pratiques (création de CV, lettre de motivation) pour agir immédiatement.</li>
+  </ul>
 
-    <p>Potentiel : FTsmart permet d’orienter les chercheurs d’emploi, de simplifier la découverte d’offres et de faciliter la candidature. Avec des améliorations (profil utilisateur, alertes, CV/lettre intégrés), il peut devenir une console complète de préparation au recrutement.</p>
+  <h3>Pourquoi l’utiliser ?</h3>
+  <p>Parce que la recherche d’emploi ne doit pas être un parcours d’obstacles : FTsmart réduit le bruit, met en avant les offres réellement adaptées et fournit des actions concrètes pour candidater immédiatement.</p>
 
-    <p>En gros, il existe plusieurs millions de profils/inscrits sur les plateformes publiques : par exemple le nombre d’inscrits suivi par le service public est de l’ordre de plusieurs millions, et des CVthèques privées comme HelloWork annoncent des banques de plusieurs millions de CV. Ces ordres de grandeur montrent l’ampleur du vivier disponible pour les entreprises et candidats. <em>(sources publiques)</em></p>
+  <h3>Ce que nous apportons</h3>
+  <p>Simplicité, rapidité et valeur pratique — pour les candidats qui veulent postuler, et pour les recruteurs qui veulent trouver des profils qualifiés.</p>
+
+  <h3>Données & potentiel</h3>
+  <p>Il existe un grand nombre de profils sur les plateformes publiques et privées (ordres de grandeur : millions de profils/CV). FTsmart transforme cet immense vivier en opportunités ciblées pour chaque utilisateur.</p>
   `;
   popupBody.innerHTML = html;
   overlay.classList.remove('hidden');
@@ -128,3 +138,4 @@ document.getElementById('searchBtn').addEventListener('click', (e)=>{ e.preventD
   const el = document.getElementById(id);
   if(el){ el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') { e.preventDefault(); searchOffers(); } }); }
 });
+
