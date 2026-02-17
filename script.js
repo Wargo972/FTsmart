@@ -1,4 +1,4 @@
-const API_BASE = ''; // si tu déploies, mets ici 'https://<ton-backend-render>'
+const API_BASE = 'https://ftsmart-backend.onrender.com'; // si tu déploies, mets ici 'https://<ton-backend-render>'
 
 function showMessage(t){ document.getElementById('messages').textContent = t; }
 
@@ -57,3 +57,4 @@ function renderResults(results){
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
 
 document.getElementById('searchBtn').addEventListener('click', searchOffers);
+
